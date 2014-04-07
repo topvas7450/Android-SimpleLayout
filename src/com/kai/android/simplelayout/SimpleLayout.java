@@ -25,30 +25,47 @@ public class SimpleLayout extends RelativeLayout {
 	public SimpleLayout(Context context) {
 		super(context);
 		displayMetrics = context.getResources().getDisplayMetrics();
-		display_width = displayMetrics.widthPixels;
-		display_height = displayMetrics.heightPixels;
-		
-//		getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
-//			
-//			@Override
-//			public void onGlobalLayout() {
-//				// TODO Auto-generated method stub
-//				LogUtil.e("test...");
-////				SimpleLayout.this.invalidate();
-//			}
-//		});
+		design_width = display_width = displayMetrics.widthPixels;
+		design_height = display_height = displayMetrics.heightPixels;
 	}
 	
 	public void setDisplayWidthHeight(int display_width, int display_height) {
 		this.display_width = display_width;
 		this.display_height = display_height;
 	}
+	
+	public void setDesignWidthHeight(int design_width, int design_height, boolean isScaleDesignAsDisplay) {
+		this.design_width = design_width;
+		this.design_height = design_height;
+		
+		if (isScaleDesignAsDisplay) {
+			double scale = Math.min(getD2pScaleX(), getD2pScaleY());
+			this.display_width = (int)(design_width*scale);
+			this.display_height = (int)(design_height*scale);
+		}
+	}
+
+	public int getDisplayWidth() {
+		return display_width;
+	}
+
+	public int getDisplayHeight() {
+		return display_height;
+	}
+	
+	public int getDesignWidth() {
+		return design_width;
+	}
+
+	public int getDesignHeight() {
+		return design_height;
+	}
 
 	/**
 	 * get design x to display x scale
 	 * @return
 	 */
-	double getD2pScaleX() {
+	public double getD2pScaleX() {
 		return ((double)display_width/design_width);
 	}
 	
@@ -56,7 +73,7 @@ public class SimpleLayout extends RelativeLayout {
 	 * get design y to display y scale
 	 * @return
 	 */
-	double getD2pScaleY() {
+	public double getD2pScaleY() {
 		return ((double)display_height/design_height);
 	}
 	
@@ -64,7 +81,7 @@ public class SimpleLayout extends RelativeLayout {
 	 * get display x to design x scale
 	 * @return
 	 */
-	double getP2dScaleX() {
+	public double getP2dScaleX() {
 		return ((double)design_width/display_width);
 	}
 	
@@ -72,7 +89,7 @@ public class SimpleLayout extends RelativeLayout {
 	 * get display y to design y scale
 	 * @return
 	 */
-	double getP2dScaleY() {
+	public double getP2dScaleY() {
 		return ((double)design_height/display_height);
 	}
 	
@@ -81,7 +98,7 @@ public class SimpleLayout extends RelativeLayout {
 	 * @param xPixel
 	 * @return
 	 */
-	int d2pScaleX(int xPixel) {
+	public int d2pScaleX(int xPixel) {
 		return (int) (xPixel*getD2pScaleX());
 	}
 	
@@ -90,7 +107,7 @@ public class SimpleLayout extends RelativeLayout {
 	 * @param yPixel
 	 * @return
 	 */
-	int d2pScaleY(int yPixel) {
+	public int d2pScaleY(int yPixel) {
 		return  (int) (yPixel*getD2pScaleY());
 	}
 	
@@ -99,7 +116,7 @@ public class SimpleLayout extends RelativeLayout {
 	 * @param xPixel
 	 * @return
 	 */
-	int p2dScaleX(int xPixel) {
+	public int p2dScaleX(int xPixel) {
 		return (int) (xPixel*getP2dScaleX());
 	}
 	
@@ -108,15 +125,15 @@ public class SimpleLayout extends RelativeLayout {
 	 * @param yPixel
 	 * @return
 	 */
-	int p2dScaleY(int yPixel) {
+	public int p2dScaleY(int yPixel) {
 		return  (int) (yPixel*getP2dScaleY());
 	}
 
-	void addView(View child, int viewWidthPixel, int viewHeightPixel, int left, int top, int right, int bottom) {
+	public void addView(View child, int viewWidthPixel, int viewHeightPixel, int left, int top, int right, int bottom) {
 		addView(child, -1, viewWidthPixel, viewHeightPixel, left, top, right, bottom);
 	}
 	
-	void addView(View child, int index, int viewWidthPixel, int viewHeightPixel, int left, int top, int right, int bottom) {
+	public void addView(View child, int index, int viewWidthPixel, int viewHeightPixel, int left, int top, int right, int bottom) {
 		update(child, viewWidthPixel, viewHeightPixel, left, top, right, bottom);
 		
 		addView(child, index);
