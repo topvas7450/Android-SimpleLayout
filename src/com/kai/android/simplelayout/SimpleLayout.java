@@ -1,9 +1,17 @@
 package com.kai.android.simplelayout;
 
+
+import java.security.spec.MGF1ParameterSpec;
+
 import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Rect;
+import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.MarginLayoutParams;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.RelativeLayout;
 
@@ -16,17 +24,47 @@ import android.widget.RelativeLayout;
  */
 public class SimpleLayout extends RelativeLayout {
 	
+	int mGravity, cGravity = Gravity.START | Gravity.TOP;
+	
 	DisplayMetrics displayMetrics = null;
 	int design_width = 1024;
 	int design_height = 768;
 	int display_width = 0;
 	int display_height = 0;
+	boolean display_keepRatio = false;
+	
+	/** These are used for computing child frames based on their gravity. */
+    private final Rect mTmpContainerRect = new Rect();
+    private final Rect mTmpChildRect = new Rect();
 
 	public SimpleLayout(Context context) {
 		super(context);
+		init(context, null);
+	}
+	
+	public SimpleLayout(Context context, AttributeSet attrs) {
+		super(context, attrs);
+		init(context, attrs);
+	}
+	
+	public SimpleLayout(Context context, AttributeSet attrs, int defStyle) {
+		super(context, attrs, defStyle);
+		init(context, attrs);
+
+	}
+	
+	private void init(Context context, AttributeSet attrs) {
+		mGravity = getGravity();
 		displayMetrics = context.getResources().getDisplayMetrics();
-		design_width = display_width = displayMetrics.widthPixels;
-		design_height = display_height = displayMetrics.heightPixels;
+		display_width = displayMetrics.widthPixels;
+		display_height = displayMetrics.heightPixels;
+		
+		
+		TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.SimpleLayout);
+		design_width = a.getDimensionPixelSize(R.styleable.SimpleLayout_design_width, 0);
+		design_height = a.getDimensionPixelSize(R.styleable.SimpleLayout_design_height, 0);
+		display_keepRatio = a.getBoolean(R.styleable.SimpleLayout_display_keepRatio, false);
+		a.recycle();
 	}
 	
 	public void setDisplayWidthHeight(int display_width, int display_height) {
@@ -129,40 +167,125 @@ public class SimpleLayout extends RelativeLayout {
 		return  (int) (yPixel*getP2dScaleY());
 	}
 
-	public void addView(View child, int viewWidthPixel, int viewHeightPixel, int left, int top, int right, int bottom) {
-		addView(child, -1, viewWidthPixel, viewHeightPixel, left, top, right, bottom);
-	}
-	
-	public void addView(View child, int index, int viewWidthPixel, int viewHeightPixel, int left, int top, int right, int bottom) {
-		update(child, viewWidthPixel, viewHeightPixel, left, top, right, bottom);
+     @Override
+     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+          super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+          LogUtil.d("widthMeasureSpec:"+widthMeasureSpec+", heightMeasureSpec:"+heightMeasureSpec);
+          LogUtil.d("layout MeasuredWidth:"+getMeasuredWidth()+", MeasuredHeight:"+getMeasuredHeight());
+     }    
+     
+	@Override
+	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+		display_width = getWidth();
+		display_height = getHeight();
+		if (design_width == 0 && design_height == 0) { //if design size not set default will be as display size.
+			design_width = display_width;
+			design_height = display_height; 
+		}
 		
-		addView(child, index);
-	}
-	
-	void update(View child, int viewWidthPixel, int viewHeightPixel, int left, int top, int right, int bottom) {
-		ViewGroup.LayoutParams params = child.getLayoutParams();
-		if (params == null)
-			params = generateDefaultLayoutParams();
-		
-		if (params instanceof RelativeLayout.LayoutParams) {
-			RelativeLayout.LayoutParams rLayoutParams = (RelativeLayout.LayoutParams) params;
-			rLayoutParams.alignWithParent = true;
-			rLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
-			rLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
-			double scale = Math.min(getD2pScaleX(), getD2pScaleY());
-			if (viewWidthPixel != -1)
-				rLayoutParams.width = (int)(scale*viewWidthPixel);
-			if (viewHeightPixel != -1)
-				rLayoutParams.height = (int)(scale*viewHeightPixel);
+		if (mGravity != cGravity) {
+			super.onLayout(changed, left, top, right, bottom);
+			
+			return;
+		}
 
-			rLayoutParams.setMargins(d2pScaleX(left),
-					d2pScaleY(top),
-					d2pScaleX(right),
-					d2pScaleY(bottom));
-			child.setLayoutParams(rLayoutParams);
-		} else {
-			LogUtil.e("params is not instanceof RelativeLayout.LayoutParams!!");
+		if (changed && display_keepRatio) {
+			double scale = Math.min(getD2pScaleX(), getD2pScaleY());
+			display_width = (int)(design_width*scale);
+			display_height = (int)(design_height*scale);
+			int r = left + display_width;
+			int b = top + display_height;
+
+			layout(left, top, r, b);
+		}
+		
+        // These are the far left and right edges in which we are performing layout.
+        int leftPos = getPaddingLeft();
+        int rightPos = right - left - getPaddingRight();
+
+
+        // These are the top and bottom edges in which we are performing layout.
+        final int parentTop = getPaddingTop();
+        final int parentBottom = bottom - top - getPaddingBottom();
+        
+        int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            final View child = getChildAt(i);
+            if (child.getVisibility() != GONE) {
+                LayoutParams lp = (LayoutParams) child.getLayoutParams();
+
+                int width = child.getMeasuredWidth();
+                int height = child.getMeasuredHeight();
+                if (design_width < width || design_height < height) {
+                	// TODO fix if child size set "match_parent" or "fill_parent"
+                	LogUtil.e("watch out! parent's design size should not smaller than child's design size!");
+                }
+
+                // Compute the frame in which we are placing this child.
+                mTmpContainerRect.left = leftPos + d2pScaleX(lp.design_xPx);
+                mTmpContainerRect.right = leftPos + d2pScaleX(width);
+                mTmpContainerRect.top = parentTop + d2pScaleY(lp.design_yPx);
+                mTmpContainerRect.bottom = parentBottom;
+
+                // Use the child's gravity and size to determine its final
+                // frame within its container.
+                Gravity.apply(lp.gravity, d2pScaleX(width), d2pScaleY(height), mTmpContainerRect, mTmpChildRect);
+
+
+                // Place the child.
+                child.layout(mTmpChildRect.left, mTmpChildRect.top,
+                        mTmpChildRect.right, mTmpChildRect.bottom);
+                
+                
+            }
+        }
+	}
+	
+	@Override
+    public LayoutParams generateLayoutParams(AttributeSet attrs) {
+        return new SimpleLayout.LayoutParams(getContext(), attrs);
+    }
+
+    @Override
+    protected LayoutParams generateDefaultLayoutParams() {
+        return new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+    }
+
+    @Override
+    protected ViewGroup.LayoutParams generateLayoutParams(ViewGroup.LayoutParams p) {
+        return new LayoutParams(p);
+    }
+
+    @Override
+    protected boolean checkLayoutParams(ViewGroup.LayoutParams p) {
+        return p instanceof LayoutParams;
+    }
+	
+	public static class LayoutParams extends RelativeLayout.LayoutParams {
+		/**
+         * The gravity to apply with the View to which these layout parameters
+         * are associated.
+         */
+        public int gravity = Gravity.TOP | Gravity.START;
+        
+		public int design_xPx = 0;
+		public int design_yPx = 0;
+
+		public LayoutParams(int width, int height) {
+			super(width, height);
+		}
+		
+		public LayoutParams(ViewGroup.LayoutParams source) {
+            super(source);
+        }
+		
+		public LayoutParams(Context c, AttributeSet attrs) {
+            super(c, attrs);
+            
+            TypedArray a = c.obtainStyledAttributes(attrs, R.styleable.SimpleLayoutLP);
+            design_xPx = a.getDimensionPixelSize(R.styleable.SimpleLayoutLP_design_x, 0);
+            design_yPx = a.getDimensionPixelSize(R.styleable.SimpleLayoutLP_design_y, 0);
+            a.recycle();
 		}
 	}
-	
 }

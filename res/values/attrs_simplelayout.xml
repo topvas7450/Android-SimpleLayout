@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="SimpleLayout">
+        <attr name="design_width" format="dimension" />
+        <attr name="design_height" format="dimension" />
+        <attr name="display_keepRatio" format="boolean" />
+    </declare-styleable>
+    
+    <declare-styleable name="SimpleLayoutLP">
+        <attr name="design_x" format="dimension" />
+        <attr name="design_y" format="dimension" />
+    </declare-styleable>
+</resources>

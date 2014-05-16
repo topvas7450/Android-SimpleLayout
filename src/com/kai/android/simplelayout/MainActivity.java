@@ -11,13 +11,20 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
 		
+		// programmatically
+		/*
 		SimpleLayout layout = new SimpleLayout(getApplication());
 		setContentView(layout, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 		
 		ImageView img = new ImageView(getApplication());
 		img.setImageResource(R.drawable.ic_launcher);
-		layout.addView(img, 200, 200, 30, 30, 0, 0);
+		SimpleLayout.LayoutParams param = new SimpleLayout.LayoutParams(144, 200);
+		param.design_xPx = 300;
+		param.design_yPx = 200;
+		layout.addView(img, param);
+		*/
 	}
 
 	@Override
