@@ -9,5 +9,6 @@
     <declare-styleable name="SimpleLayoutLP">
         <attr name="design_x" format="dimension" />
         <attr name="design_y" format="dimension" />
+        <attr name="android:layout_gravity" />
     </declare-styleable>
 </resources>

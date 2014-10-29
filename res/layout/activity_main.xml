@@ -16,18 +16,27 @@
         android:text="@string/hello_world" />
     
     <com.kai.android.simplelayout.SimpleLayout
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/bg" >
+        android:background="@drawable/b1024_768"
+        app:design_width="1024px"
+    	app:design_height="768px" >
+    	
+        <Button
+		    android:layout_width="100px"
+		    android:layout_height="100px"
+		    app:design_x="123px"
+		    app:design_y="82px"
+		    android:text="Button" />
 
 		<com.kai.android.simplelayout.SimpleLayout
 		    android:id="@+id/view"
 		    android:layout_width="300px"
 		    android:layout_height="300px"
 		    android:background="@android:color/holo_blue_bright"
-		    app:design_height="400px"
-		    app:design_width="400px"
-		    app:display_keepRatio="true" >
+		    app:display_keepRatio="true"
+		    app:design_x="665px"
+		    app:design_y="500px" >
 	
 			<Button
 			    android:id="@+id/button1"
