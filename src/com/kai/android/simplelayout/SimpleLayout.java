@@ -171,7 +171,7 @@ public class SimpleLayout extends RelativeLayout {
 		return  (int) (yPixel*getP2dScaleY());
 	}
 
-     @Override
+	 @Override
      protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     	 int layoutWidthMeasureSpec = widthMeasureSpec;
          int layoutHeightMeasureSpec = heightMeasureSpec;
@@ -192,8 +192,39 @@ public class SimpleLayout extends RelativeLayout {
     	 for (int i = 0; i < count; i++) {
              View child = getChildAt(i);
              if (GONE != child.getVisibility()) {
+            	 LayoutParams lp = (LayoutParams) child.getLayoutParams();
+            	 int width = d2pScaleX(lp.width);
+                 int height = d2pScaleY(lp.height);
+                 if (LayoutParams.WRAP_CONTENT == lp.width) {
+                     width = display_width;
+                 } else if (LayoutParams.MATCH_PARENT == lp.width) {
+                	 width = display_width;
+                 } 
+                 if (LayoutParams.WRAP_CONTENT == lp.height) {
+                	 height = display_height;
+                 } else if (LayoutParams.MATCH_PARENT == lp.height) {
+                	 height = display_height;
+                 }
+                 if (child instanceof SimpleLayout) {
+                	 SimpleLayout sc = (SimpleLayout) child;
+                	 if (sc.isDisplayKeepRatio) {
+	                	 double scale = Math.min(getD2pScaleX(), getD2pScaleY());
+	                	 width = (int) (lp.width*scale);
+	                	 height = (int) (lp.height*scale);
+                	 }
+                 }
+                 
+                 int widthMeasureMode = widthMode;
+                 int heightMeasureMode = heightMode;
+                 // It's testing. Let child's bound inside parent's is more simple to use and easy to understand.
+                 if (!(child instanceof ViewGroup)) {
+                	 widthMeasureMode = MeasureSpec.AT_MOST;
+                	 heightMeasureMode = MeasureSpec.AT_MOST;
+                 }
+                 int widthspec = MeasureSpec.makeMeasureSpec(width, widthMeasureMode);
+                 int heightspec = MeasureSpec.makeMeasureSpec(height, heightMeasureMode);
             	// Measure the child.
-            	 child.measure(layoutWidthMeasureSpec, layoutHeightMeasureSpec);
+            	 child.measure(widthspec, heightspec);
                  childState = combineMeasuredStates(childState, child.getMeasuredState());
              }
     	 }
@@ -225,26 +256,9 @@ public class SimpleLayout extends RelativeLayout {
                  
                  LayoutParams lp = (LayoutParams) child.getLayoutParams();
 //                 LogUtil.d("child id:"+child.getId()+",lp width:"+lp.width+",height:"+lp.height);
-                 int width = d2pScaleX(lp.width);
-                 int height = d2pScaleY(lp.height);
-                 if (LayoutParams.WRAP_CONTENT == lp.width) {
-                     width = childOldWidthMeasureSpec;
-                 } else if (LayoutParams.MATCH_PARENT == lp.width) {
-                	 width = display_width; // if child layout is not position on origin, layout may out of container
-                 } 
-                 if (LayoutParams.WRAP_CONTENT == lp.height) {
-                	 height = childOldHeightMeasureSpec;
-                 } else if (LayoutParams.MATCH_PARENT == lp.height) {
-                	 height = display_height; // if child layout is not position on origin, layout may out of container
-                 }
-                 if (child instanceof SimpleLayout) {
-                	 SimpleLayout sc = (SimpleLayout) child;
-                	 if (sc.isDisplayKeepRatio) {
-	                	 double scale = Math.min(getD2pScaleX(), getD2pScaleY());
-	                	 width = (int) (lp.width*scale);
-	                	 height = (int) (lp.height*scale);
-                	 }
-                 }
+                 int width = childOldWidthMeasureSpec;
+                 int height = childOldHeightMeasureSpec;
+
                  
                  // Compute the frame in which we are placing this child.
                  int shiftX = d2pScaleX(lp.design_xPx); // default is Gravity.LEFT
@@ -276,21 +290,9 @@ public class SimpleLayout extends RelativeLayout {
                  // Use the child's gravity and size to determine its final frame within its container.
                  Gravity.apply(lp.layout_gravity, width, height, mTmpContainerRect, mTmpChildRect);
        
-                 
-                 // XXX If view width or height no change, not need to measure again. If still measure again,
-                 // this will be slower. And if view is RelativeLayout, this will cause attribute "gravity" no use
-                 // but view is LinearLayout won't. (still need to understand...)
-                 if ((width != childOldWidthMeasureSpec) || (height != childOldHeightMeasureSpec)) {
-                	// Measure the child.
-                     int widthMeasureSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST);
-                     int heightMeasureSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST);
-                	 child.measure(widthMeasureSpec, heightMeasureSpec);
-                 }
-                 
                  LogUtil.d("child layout position:"+mTmpChildRect.toString());
-                 // Place the child.
+//                 // Place the child.
                  child.layout(mTmpChildRect.left, mTmpChildRect.top, mTmpChildRect.right, mTmpChildRect.bottom);
-
              }
          }
  	}
