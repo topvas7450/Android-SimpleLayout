@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 /**
  * Android Simple RelativeLayout
@@ -217,10 +218,18 @@ public class SimpleLayout extends RelativeLayout {
                  int widthMeasureMode = widthMode;
                  int heightMeasureMode = heightMode;
                  // It's testing. Let child's bound inside parent's is more simple to use and easy to understand.
-                 if (!(child instanceof ViewGroup)) {
-                	 widthMeasureMode = MeasureSpec.AT_MOST;
-                	 heightMeasureMode = MeasureSpec.AT_MOST;
-                 }
+//                 if (!(child instanceof ViewGroup)) {
+//                     // TextView measure will compare desired size with widget size if use MeasureSpec.AT_MOST
+//                     // We assign actual size by layout parameter, so here use MeasureSpec.EXACTLY is make sense.
+//                     if (child instanceof TextView) {
+//                         widthMeasureMode = MeasureSpec.EXACTLY;
+//                         heightMeasureMode = MeasureSpec.EXACTLY;
+//                     }
+//                     else {
+//                         widthMeasureMode = MeasureSpec.AT_MOST;
+//                         heightMeasureMode = MeasureSpec.AT_MOST;
+//                     }
+//                 }
                  int widthspec = MeasureSpec.makeMeasureSpec(width, widthMeasureMode);
                  int heightspec = MeasureSpec.makeMeasureSpec(height, heightMeasureMode);
             	// Measure the child.
